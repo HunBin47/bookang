@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,13 +41,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    'cloudinary',
     "accounts",
     "category",
     "carts",
     "store",
     "orders",
 ]
-# AUTH_USER_MODEL = 'accounts.Account'
+AUTH_USER_MODEL = 'accounts.Account'
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -129,3 +133,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': '4'
 }
+
+# Cloudinary config
+cloudinary.config( 
+  cloud_name = 'dy7he6gby', 
+  api_key = "544737438545296", 
+  api_secret = "AYzdOQyhv0jKHKaQSFumSd9T1cM" 
+)
+
+# CLOUDINARY_CLOUD_NAME= dy7he6gby
+# CLOUDINARY_API_KEY = 544737438545296
+# CLOUDINARY_API_SECRET = AYzdOQyhv0jKHKaQSFumSd9T1cM

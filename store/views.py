@@ -10,22 +10,47 @@ from carts.models import Cart, CartItem
 from orders.models import OrderProduct
 
 from store.serializers import ProductSerializer
-from store.models import Product, ReviewRating
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+from store.models import Product
+from rest_framework import status
+from rest_framework import generics
+from rest_framework.parsers import FormParser, MultiPartParser
 
-
-class ListCreateProductView(ListCreateAPIView):
+parser_classes = [MultiPartParser, FormParser]
+class ListProductView(generics.ListAPIView):
     model = Product
     serializer_class = ProductSerializer
-    def store(request, category_slug = None):
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get('category_slug')
         if category_slug is not None:
             categories = get_object_or_404(Category.objects.all(), slug=category_slug)
-            queryset = Product.objects.all().filter(category = categories, is_available = True)
+            queryset = Product.objects.filter(category=categories, is_available=True)
         else:
-            queryset = Product.objects.all().filter(is_available = True).order_by('id')
-    
+            queryset = Product.objects.filter(is_available=True).order_by('id')
+        return queryset
+   
 
-class ProductDetailView(RetrieveAPIView):
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
+    
+    # def store(self, request, category_slug = None):
+    #     if category_slug is not None:
+    #         categories = get_object_or_404(Category.objects.all(), category__slug=category_slug)
+    #         queryset = Product.objects.all().filter(category = categories, is_available = True)
+    #     else:
+    #         queryset = Product.objects.all().filter(is_available = True).order_by('id')
+    #     return JsonResponse(queryset)
+    
+# class CreateProductView(generics.CreateAPIView):
+#     model = Product
+#     serializer_class = ProductSerializer 
+
+class ProductDetailView(generics.RetrieveAPIView):
+    model = Product
+    serializer_class = ProductSerializer
+
     def product_detail(request, category_slug, product_slug=None):
         try:
             single_product = Product.objects.get(slug=category_slug, product_slug=product_slug)
@@ -43,6 +68,4 @@ class ProductDetailView(RetrieveAPIView):
             orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
         except Exception:
             orderproduct = None
-
-        reviews = ReviewRating.objects.filter(product_id=single_product.id, status=True)
 
