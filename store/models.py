@@ -10,7 +10,7 @@ class Product(models.Model):
     author = models.CharField(max_length=50, null=True)
     description = models.TextField(max_length=300)
     price = models.IntegerField()
-    images = CloudinaryField()
+    images = CloudinaryField(default=None, blank=True)
     stock = models.IntegerField()
     is_available = models.BooleanField(default=True)
     category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)

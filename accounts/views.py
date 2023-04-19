@@ -53,7 +53,7 @@ def register(request):
             user.save()
             return JsonResponse({'success': True})
         else:
-            return JsonResponse({'success': False, 'message': 'Invalid information.'})
+            return JsonResponse({'success': False, 'message': 'Invalid information.', 'details' : form.error_messages})
     else:
         return JsonResponse({'success': False, 'message': 'Please enter a email or password'})
 
