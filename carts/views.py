@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 
@@ -150,13 +151,14 @@ def cart(request, total=0, quantity=0, cart_items=None):
         pass    # Chỉ bỏ qua
     print(request.user)
     context = {
+        'user' : request.user.username,
         'total': total,
         'quantity': quantity,
         'cart_items': cart_items,
         'tax': tax if "tax" in locals() else "",
         'grand_total': grand_total if "tax" in locals() else 0,
     }
-    return render(request, 'store/cart.html', context=context)
+    return JsonResponse(context)
 
 @login_required(login_url='login')
 def checkout(request, total=0, quantity=0, cart_items=None):
