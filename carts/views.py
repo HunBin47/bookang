@@ -3,6 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 
 from store.models import Product
 from carts.models import Cart, CartItem
@@ -14,6 +16,7 @@ def _cart_id(request):
         cart_id = request.session.create()
     return cart_id
 
+@csrf_exempt
 def add_cart(request, product_id):
     current_user = request.user
     product = Product.objects.get(id=product_id)    # Get object product
@@ -66,16 +69,16 @@ def add_cart(request, product_id):
                 cart=cart
             )
             id = [item.id for item in cart_items]
-            if product_variations in existing_variation_list:
-                idex = existing_variation_list.index(product_variations)
-                cart_item = CartItem.objects.get(id=id[idex])
-                cart_item.quantity += 1
-            else:
-                cart_item = CartItem.objects.create(
-                    product=product,
-                    cart=cart,
-                    quantity=1
-                )
+            # if product_variations in existing_variation_list:
+            #     idex = existing_variation_list.index(product_variations)
+            #     cart_item = CartItem.objects.get(id=id[idex])
+            #     cart_item.quantity += 1
+            # else:
+            #     cart_item = CartItem.objects.create(
+            #         product=product,
+            #         cart=cart,
+            #         quantity=1
+            #     )
         else:
             cart_item = CartItem.objects.create(
                 product=product,
@@ -149,9 +152,9 @@ def cart(request, total=0, quantity=0, cart_items=None):
         grand_total = total + tax
     except ObjectDoesNotExist:
         pass    # Chỉ bỏ qua
-    print(request.user)
+    # print(request.user)
     context = {
-        'user' : request.user.username,
+        'user': request.user.username,
         'total': total,
         'quantity': quantity,
         'cart_items': cart_items,
