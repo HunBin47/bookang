@@ -27,13 +27,15 @@ def login_accounts(request):
         email = data.get('email')
         password = data.get('password')
         user = authenticate(request, email=email, password=password)
+        print(data)
         if user is not None:
             login(request, user)
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'message': 'Invalid email or password.'})
-    else: 
+    else:
         return JsonResponse({'success': False, 'message': 'Please enter a email or password'})
+
 
 @csrf_exempt
 def register(request):
@@ -53,17 +55,20 @@ def register(request):
             user.save()
             return JsonResponse({'success': True})
         else:
-            return JsonResponse({'success': False, 'message': 'Invalid information.', 'details' : form.error_messages})
+            return JsonResponse({'success': False, 'message': 'Invalid information.', 'details': form.error_messages})
     else:
         return JsonResponse({'success': False, 'message': 'Please enter a email or password'})
+
 
 @login_required(login_url="login")
 def dashboard(request):
     return render(request, "accounts/dashboard.html")
 
+
 def logout(request):
     logout(request)
     return JsonResponse({'message': 'Successfully logged out.'})
+
 
 def reset_password_validate(request, uidb64, token):
     try:
