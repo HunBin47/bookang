@@ -19,10 +19,9 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path('', include('store.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('carts/', include('carts.urls')),
-    path('store', include('store.urls')),
+    path('store/', include('store.urls')),
     path('category/',include('category.urls')),
 ]
