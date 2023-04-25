@@ -67,12 +67,14 @@ def create_product(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
-def product_detail(request, category_slug, product_slug=None):
+def product_detail(request,  product_slug=None):
     model = Product
     serializer_class = ProductSerializer
 
     try:
-        single_product = Product.objects.get(slug=category_slug, product_slug=product_slug)
+        print(product_slug)
+        print("Hello")
+        single_product = Product.objects.get(slug=product_slug)
         cart = Cart.objects.get(cart_id=_cart_id(request=request))
         in_cart = CartItem.objects.filter(
             cart = cart,
@@ -100,8 +102,9 @@ class ProductDetailView(generics.RetrieveAPIView):
     def get_object(self, queryset=None):
         category_slug = self.kwargs.get('category_slug')
         product_slug = self.kwargs.get('product_slug')
+        print(product_slug)
         try:
-            obj = get_object_or_404(Product.objects.filter(category__slug=category_slug, slug=product_slug))
+            obj = get_object_or_404(Product.objects.filter( slug=product_slug))
         except Product.DoesNotExist:
             obj = None
         return obj
