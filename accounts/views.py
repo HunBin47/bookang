@@ -18,7 +18,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.views.decorators.csrf import csrf_protect
-
+from django.middleware import csrf
 
 @csrf_exempt
 def login_accounts(request):
@@ -30,7 +30,11 @@ def login_accounts(request):
         print(data)
         if user is not None:
             login(request, user)
-            return JsonResponse({'success': True})
+            return JsonResponse({
+                'user':user,
+                'success': True,
+                'token': csrf.get_token(request)
+            })
         else:
             return JsonResponse({'success': False, 'message': 'Invalid email or password.'})
     else:
