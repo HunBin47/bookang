@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     'rest_framework_simplejwt.token_blacklist',
     'cloudinary',
     "accounts",
@@ -50,12 +51,23 @@ INSTALLED_APPS = [
     "store",
     "orders",
 ]
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 AUTH_USER_MODEL = 'accounts.Account'
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -100,9 +112,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
 ]
 
 
@@ -140,10 +152,10 @@ REST_FRAMEWORK = {
 }
 
 # Cloudinary config
-cloudinary.config( 
-  cloud_name = 'dy7he6gby', 
-  api_key = "544737438545296", 
-  api_secret = "AYzdOQyhv0jKHKaQSFumSd9T1cM" 
+cloudinary.config(
+    cloud_name='dy7he6gby',
+    api_key="544737438545296",
+    api_secret="AYzdOQyhv0jKHKaQSFumSd9T1cM"
 )
 
 # CLOUDINARY_CLOUD_NAME= dy7he6gby
