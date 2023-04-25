@@ -33,7 +33,7 @@ def add_cart(request, product_id):
                 user=current_user
             )
             id = [item.id for item in cart_items]
-            cart_item = CartItem.objects.get(id=id[idex])
+            cart_item = CartItem.objects.get(id=id[index])
             cart_item.quantity += 1
             # else:
             #     cart_item = CartItem.objects.create(

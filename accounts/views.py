@@ -19,7 +19,9 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.views.decorators.csrf import csrf_protect
 from django.middleware import csrf
-
+import json
+from django.forms.models import model_to_dict
+from django.core.serializers import serialize
 @csrf_exempt
 def login_accounts(request):
     if request.method == 'POST':
@@ -27,12 +29,15 @@ def login_accounts(request):
         email = data.get('email')
         password = data.get('password')
         user = authenticate(request, email=email, password=password)
-        print(data)
         if user is not None:
             login(request, user)
+
+            
+            
+           
             return JsonResponse({
-                'user':user,
-                'success': True,
+                'username':user.username ,
+                'email':user.email,
                 'token': csrf.get_token(request)
             })
         else:

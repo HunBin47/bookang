@@ -59,6 +59,12 @@ class Account(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+    def __repr__(self):
+       user = {
+           "username": self.username,
+           "email": self.email
+       }
+       return user
 
     def has_perm(self, perm, obj=None):
         return self.is_admin    # Admin có tất cả quyền trong hệ thống
