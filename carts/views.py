@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.core import serializers
 
 
 from store.models import Product
@@ -17,45 +18,31 @@ def _cart_id(request):
     return cart_id
 
 @csrf_exempt
-def add_cart(request, product_id):
-    current_user = request.user
-    product = Product.objects.get(id=product_id)    # Get object product
-    if current_user.is_authenticated:
-        if request.method == 'POST':
-            for item in request.POST:
-                key = item
-                value = request.POST.get(key)
+def add_cart(request, product_slug):
+    product = Product.objects.get(slug=product_slug)
 
-        is_exists_cart_item = CartItem.objects.filter(product=product, user=current_user).exists()
+    if request.user.is_authenticated:
+        is_exists_cart_item = CartItem.objects.filter(product=product, cart__user=request.user).exists()
         if is_exists_cart_item:
             cart_items = CartItem.objects.filter(
                 product=product,
-                user=current_user
+                cart__user=request.user
             )
-            id = [item.id for item in cart_items]
-            cart_item = CartItem.objects.get(id=id[index])
+            # id = [item.id for item in cart_items]
+            cart_item = cart_items[0]
             cart_item.quantity += 1
-            # else:
-            #     cart_item = CartItem.objects.create(
-            #         product=product,
-            #         user=current_user,
-            #         quantity=1
-            #     )
         else:
             cart_item = CartItem.objects.create(
                 product=product,
-                user=current_user,
+                cart=Cart.objects.create(user=request.user),
+                # cart__user=request.user,
                 quantity=1
             )
         cart_item.save()
         return redirect('cart')
     else:
-        if request.method == 'POST':
-            for item in request.POST:
-                key = item
-                value = request.POST.get(key)
         try:
-            cart = Cart.objects.get(cart_id=_cart_id(request=request))  # Get cart using the _cart_id
+            cart = Cart.objects.get(cart_id=_cart_id(request=request))
         except Cart.DoesNotExist:
             cart = Cart.objects.create(
                 cart_id=_cart_id(request)
@@ -69,16 +56,8 @@ def add_cart(request, product_id):
                 cart=cart
             )
             id = [item.id for item in cart_items]
-            # if product_variations in existing_variation_list:
-            #     idex = existing_variation_list.index(product_variations)
-            #     cart_item = CartItem.objects.get(id=id[idex])
-            #     cart_item.quantity += 1
-            # else:
-            #     cart_item = CartItem.objects.create(
-            #         product=product,
-            #         cart=cart,
-            #         quantity=1
-            #     )
+            cart_item = cart_items[0]
+            cart_item.quantity += 1
         else:
             cart_item = CartItem.objects.create(
                 product=product,
@@ -87,6 +66,80 @@ def add_cart(request, product_id):
             )
         cart_item.save()
         return redirect('cart')
+    
+
+# def add_cart(request, product_slug):
+#     current_user = request.user
+#     product = Product.objects.get(slug=product_slug)    # Get object product
+#     if current_user.is_authenticated:
+#         if request.method == 'POST':
+#             for item in request.POST:
+#                 key = item
+#                 value = request.POST.get(key)
+
+#         is_exists_cart_item = CartItem.objects.filter(product=product, user=current_user).exists()
+#         if is_exists_cart_item:
+#             cart_items = CartItem.objects.filter(
+#                 product=product,
+#                 user=current_user
+#             )
+#             id = [item.id for item in cart_items]
+#             # cart_item = CartItem.objects.get(id=id[idex])
+#             cart_item.quantity += 1
+#             # else:
+#             #     cart_item = CartItem.objects.create(
+#             #         product=product,
+#             #         user=current_user,
+#             #         quantity=1
+#             #     )
+#         else:
+#             cart_item = CartItem.objects.create(
+#                 product=product,
+#                 user=current_user,
+#                 quantity=1
+#             )
+#         cart_item.save()
+#         return redirect('cart')
+#     else:
+#         if request.method == 'POST':
+#             for item in request.POST:
+#                 key = item
+#                 value = request.POST.get(key)
+#         try:
+#             cart = Cart.objects.get(cart_id=_cart_id(request=request))  # Get cart using the _cart_id
+#         except Cart.DoesNotExist:
+#             cart = Cart.objects.create(
+#                 cart_id=_cart_id(request)
+#             )
+#         cart.save()
+
+#         is_exists_cart_item = CartItem.objects.filter(product=product, cart=cart).exists()
+#         if is_exists_cart_item:
+#             cart_items = CartItem.objects.filter(
+#                 product=product,
+#                 cart=cart
+#             )
+#             id = [item.id for item in cart_items]
+#             # if product_variations in existing_variation_list:
+#             #     idex = existing_variation_list.index(product_variations)
+#             #     cart_item = CartItem.objects.get(id=id[idex])
+#             #     cart_item.quantity += 1
+#             # else:
+#             #     cart_item = CartItem.objects.create(
+#             #         product=product,
+#             #         cart=cart,
+#             #         quantity=1
+#             #     )
+#         else:
+#             cart_item = CartItem.objects.create(
+#                 product=product,
+#                 cart=cart,
+#                 quantity=1
+#             )
+#         cart_item.save()
+#         return JsonResponse({
+#             'message': 'Added to cart'
+#         })
 
 
 def remove_cart(request, product_id, cart_item_id):
@@ -136,11 +189,12 @@ def remove_cart_item(request, product_id, cart_item_id):
         pass
     return redirect('cart')
 
-
+@csrf_exempt
 def cart(request, total=0, quantity=0, cart_items=None):
     try:
         if request.user.is_authenticated:
-            cart_items = CartItem.objects.filter(user=request.user, is_active=True)
+            # cart_items = CartItem.objects.filter(user=request.user, is_active=True)
+            cart_items = CartItem.objects.filter(cart__user=request.user, is_active=True)
         else:
             cart = Cart.objects.get(cart_id=_cart_id(request=request))
             cart_items = CartItem.objects.filter(cart=cart, is_active=True)
@@ -152,12 +206,13 @@ def cart(request, total=0, quantity=0, cart_items=None):
         grand_total = total + tax
     except ObjectDoesNotExist:
         pass    # Chỉ bỏ qua
-    # print(request.user)
+    cart_items_data = serializers.serialize('python', cart_items)
+    cart_items_list = [item['fields'] for item in cart_items_data]
     context = {
         'user': request.user.username,
         'total': total,
         'quantity': quantity,
-        'cart_items': cart_items,
+        'cart_items': cart_items_list,
         'tax': tax if "tax" in locals() else "",
         'grand_total': grand_total if "tax" in locals() else 0,
     }

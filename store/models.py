@@ -13,7 +13,7 @@ class Product(models.Model):
     images = CloudinaryField(default=None, blank=True)
     stock = models.IntegerField()
     is_available = models.BooleanField(default=True)
-    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL,related_name="category")
     created_date = models.DateTimeField(auto_now_add = True)
     modified_date = models.DateTimeField(auto_now = True)
     def get_url(self):

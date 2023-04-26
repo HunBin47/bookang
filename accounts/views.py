@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib import auth
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.decorators import login_required
 from rest_framework import status
@@ -31,9 +32,6 @@ def login_accounts(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-
-            
-            
            
             return JsonResponse({
                 'username':user.username ,
@@ -73,11 +71,10 @@ def register(request):
 def dashboard(request):
     return render(request, "accounts/dashboard.html")
 
-
+@csrf_exempt
 def logout(request):
-    logout(request)
+    auth.logout(request)
     return JsonResponse({'message': 'Successfully logged out.'})
-
 
 def reset_password_validate(request, uidb64, token):
     try:
