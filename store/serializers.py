@@ -5,9 +5,9 @@ from category.serializers import CategorySerializer
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category_name  = serializers.CharField(source='category.category_name',read_only=True)
     class Meta:
         model = Product
-        category_name  = serializers.CharField(source='category.category_name')
-        fields = ('product_name', 'slug', 'author', 'description', 'price','category',
+        fields = ('product_name', 'slug', 'author', 'description', 'price','category_name',
                            'stock', 'is_available',  'image_url')
         
