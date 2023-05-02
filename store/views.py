@@ -66,34 +66,34 @@ def create_product(request):
             'message': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
-def product_detail(request,  product_slug=None):
-    model = Product
-    serializer_class = ProductSerializer
+# @csrf_exempt
+# def product_detail(request,  product_slug=None):
+#     model = Product
+#     serializer_class = ProductSerializer
 
-    try:
-        print(product_slug)
-        print("Hello")
-        single_product = Product.objects.get(slug=product_slug)
-        cart = Cart.objects.get(cart_id=_cart_id(request=request))
-        in_cart = CartItem.objects.filter(
-            cart = cart,
-            product = single_product
-    ).exists()
-    except Exception as e:
-        cart = Cart.objects.create(
-            cart_id=_cart_id(request)
-    )
-    try:
-        orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
-    except Exception:
-        orderproduct = None
-    context = {
-    'single_product': single_product,
-    'in_cart': in_cart if 'in_cart' in locals() else False,
-    'orderproduct': orderproduct
-    }
-    return JsonResponse(context)
+#     try:
+#         print(product_slug)
+#         print("Hello")
+#         single_product = Product.objects.get(slug=product_slug)
+#         cart = Cart.objects.get(cart_id=_cart_id(request=request))
+#         in_cart = CartItem.objects.filter(
+#             cart = cart,
+#             product = single_product
+#     ).exists()
+#     except Exception as e:
+#         cart = Cart.objects.create(
+#             cart_id=_cart_id(request)
+#     )
+#     try:
+#         orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
+#     except Exception:
+#         orderproduct = None
+#     context = {
+#     'single_product': single_product,
+#     'in_cart': in_cart if 'in_cart' in locals() else False,
+#     'orderproduct': orderproduct
+#     }
+#     return JsonResponse(context)
 
 class ProductDetailView(generics.RetrieveAPIView):
     model = Product
