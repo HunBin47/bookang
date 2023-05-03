@@ -9,6 +9,7 @@ from django.core import serializers
 
 from store.models import Product
 from carts.models import Cart, CartItem
+from accounts.models import Account
 
 
 def _cart_id(request):
@@ -190,12 +191,13 @@ def remove_cart_item(request, product_id, cart_item_id):
     return redirect('cart')
 
 @csrf_exempt
-def cart(request, total=0, quantity=0, cart_items=None):
+def cart(request, total=0, quantity=0, cart_items=None, username=None):
     if request.method == 'GET':
+        user = Account.objects.get(username=username)
         try:
-            if request.user.is_authenticated:
+            if user is not None:
                 # cart_items = CartItem.objects.filter(user=request.user, is_active=True)
-                cart_items = CartItem.objects.filter(cart__user=request.user, is_active=True)
+                cart_items = CartItem.objects.filter(cart__user=user, is_active=True)
             else:
                 cart = Cart.objects.get(cart_id=_cart_id(request=request))
                 cart_items = CartItem.objects.filter(cart=cart, is_active=True)
@@ -210,7 +212,7 @@ def cart(request, total=0, quantity=0, cart_items=None):
         cart_items_data = serializers.serialize('python', cart_items)
         cart_items_list = [item['fields'] for item in cart_items_data]
         context = {
-            'user': request.user.username,
+            'user': username,
             'total': total,
             'quantity': quantity,
             'cart_items': cart_items_list,
