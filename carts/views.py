@@ -105,14 +105,14 @@ def reduce_cart(request, product_slug):
 def remove_cart_item(request, product_slug):
     if request.method == 'DELETE':
         product = get_object_or_404(Product, slug=product_slug)
-        if request.user.is_authenticated:
-            cart_item = get_object_or_404(CartItem,
-                product=product
-            )
-        else:
-            return JsonResponse({
-                'message': 'User is not authenticated'
-            })
+        cart_item = get_object_or_404(CartItem,
+            product=product
+        )
+        # if request.user.is_authenticated:
+        # else:
+        #     return JsonResponse({
+        #         'message': 'User is not authenticated'
+        #     })
         cart_item.delete()
 
         return JsonResponse({
