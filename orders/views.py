@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
+from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.core import serializers
+# from django.core import serializers
 from django.http import JsonResponse
 import json
 
@@ -21,12 +22,12 @@ def place_order(request):
     #     return redirect('store')
     
     if request.method == 'POST':
-        serializers = OrderSerializer(request.POST)
-        if serializers.is_valid():
+            serializer = OrderSerializer(request.POST)
+        #if serializer.is_valid():
             data = Order()
             data.user = current_user
-            data.order_total = serializers.cleaned_data['order_total']
-            data.is_ordered = serializers.cleaned_data['is_ordered']
+            data.order_total = serializer.cleaned_data['order_total']
+            # data.is_ordered = serializer.cleaned_data['is_ordered']
             data.save()
 
             product_list = data["list_product"]
@@ -34,10 +35,23 @@ def place_order(request):
                 order_product = OrderProduct() 
                 slug = p["product_slug"]
                 stocked_product = get_object_or_404(Product.objects.all(), slug=slug)
+                try:
+                    stocked_product = get_object_or_404(Product.objects.all(), slug=slug)
+                except Http404:
+                    return JsonResponse({
+                        "message": "Stocked product with slug {} not found".format(slug)
+                    })
                 if stocked_product.stock - p["quantity"] > 0:
                     order_product.order =  data
-                    order_product.product = p["product_slug"]
+                    try:
+                        order_product.product = get_object_or_404(Product.objects.all(), slug=p["product_slug"])
+                    except Http404:
+                        return JsonResponse({
+                        "message": "Ordered product with slug {} not found".format(slug)
+                        })
                     order_product.quantity = p["quantity"] 
+                    stocked_product.stock = stocked_product.stock - p["quantity"]
+                    stocked_product.save()
                 else:
                     return JsonResponse({
                         "message": "The number of items is not enough to fulfill the order"
@@ -60,6 +74,13 @@ def place_order(request):
                 'order' : order
             }
             return JsonResponse(context)
+    
+        #else: return JsonResponse(serializer.errors, status=400)
+    # else:
+    #     # Return response for invalid request method
+    #     return HttpResponseNotAllowed(['POST'])
+    
+
 
         # order = Order()
         # data = json.loads(request.body)

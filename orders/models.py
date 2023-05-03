@@ -19,7 +19,6 @@ class Order(models.Model):
     user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
     order_number = models.CharField(max_length=20)
     order_total = models.FloatField()
-    is_ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

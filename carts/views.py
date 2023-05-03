@@ -191,32 +191,34 @@ def remove_cart_item(request, product_id, cart_item_id):
 
 @csrf_exempt
 def cart(request, total=0, quantity=0, cart_items=None):
-    try:
-        if request.user.is_authenticated:
-            # cart_items = CartItem.objects.filter(user=request.user, is_active=True)
-            cart_items = CartItem.objects.filter(cart__user=request.user, is_active=True)
-        else:
-            cart = Cart.objects.get(cart_id=_cart_id(request=request))
-            cart_items = CartItem.objects.filter(cart=cart, is_active=True)
-        # print(cart_items.count())
-        for cart_item in cart_items:
-            total += cart_item.product.price * cart_item.quantity
-            quantity += cart_item.quantity
-        tax = total * 10 / 100
-        grand_total = total + tax
-    except ObjectDoesNotExist:
-        pass    # Chỉ bỏ qua
-    cart_items_data = serializers.serialize('python', cart_items)
-    cart_items_list = [item['fields'] for item in cart_items_data]
-    context = {
-        'user': request.user.username,
-        'total': total,
-        'quantity': quantity,
-        'cart_items': cart_items_list,
-        'tax': tax if "tax" in locals() else "",
-        'grand_total': grand_total if "tax" in locals() else 0,
-    }
-    return JsonResponse(context)
+    if request.method == 'GET':
+        try:
+            if request.user.is_authenticated:
+                # cart_items = CartItem.objects.filter(user=request.user, is_active=True)
+                cart_items = CartItem.objects.filter(cart__user=request.user, is_active=True)
+            else:
+                cart = Cart.objects.get(cart_id=_cart_id(request=request))
+                cart_items = CartItem.objects.filter(cart=cart, is_active=True)
+            # print(cart_items.count())
+            for cart_item in cart_items:
+                total += cart_item.product.price * cart_item.quantity
+                quantity += cart_item.quantity
+            tax = total * 10 / 100
+            grand_total = total + tax
+        except ObjectDoesNotExist:
+            pass    # Chỉ bỏ qua
+        cart_items_data = serializers.serialize('python', cart_items)
+        cart_items_list = [item['fields'] for item in cart_items_data]
+        context = {
+            'user': request.user.username,
+            'total': total,
+            'quantity': quantity,
+            'cart_items': cart_items_list,
+            'tax': tax if "tax" in locals() else "",
+            'grand_total': grand_total if "tax" in locals() else 0,
+        }
+        return JsonResponse(context)
+        
 
 @login_required(login_url='login')
 def checkout(request, total=0, quantity=0, cart_items=None):
