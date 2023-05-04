@@ -128,12 +128,18 @@ def cart(request, username):
     if request.method == 'GET':
         try:
             user = Account.objects.get(username=username)
-            cart_items = CartItem.objects.filter(cart__user=user, is_active=True)
-            serializer = CartItemSerializer(cart_items, many=True)
-            cart_items_data = serializer.data
-            cart_items_list = [item for item in cart_items_data]
-            total = sum([item.get('price') * item['quantity'] for item in cart_items_list])
-            quantity = sum([item['quantity'] for item in cart_items_list])
+            cart = Cart.objects.filter(user=user).last()
+            if cart is None:
+                cart_items_list = []
+                total = 0
+                quantity = 0
+            else:
+                cart_items = CartItem.objects.filter(cart__user=user, is_active=True)
+                serializer = CartItemSerializer(cart_items, many=True)
+                cart_items_data = serializer.data
+                cart_items_list = [item for item in cart_items_data]
+                total = sum([item.get('price') * item['quantity'] for item in cart_items_list])
+                quantity = sum([item['quantity'] for item in cart_items_list])
             context = {
                 'user': username,
                 'total': total,
