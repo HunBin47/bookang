@@ -18,13 +18,13 @@ from store.models import Product
 class Order(models.Model):
     user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
     order_number = models.CharField(max_length=20)
-    order_total = models.FloatField()
+    order_total = models.FloatField(default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 
     def __str__(self):
-        return self.user.first_name
+        return self.user.username
 
     # ip = models.CharField(blank=True, max_length=20)
     # STATUS = (

@@ -69,6 +69,7 @@ def login_accounts(request):
         password = data.get('password')
         user = authenticate(request, email=email, password=password)
         if user is not None:
+            request.COOKIE['user'] = user
             request.session['user_id'] = user.id
             login(request, user)
             return JsonResponse({
