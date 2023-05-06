@@ -31,7 +31,7 @@ from django.core.serializers import serialize
 import base64
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
-from cryptography.fernet import Fernet
+# from cryptography.fernet import Fernet
 
 def decrypt_password(encrypted_password):
     # key = b'mysecretkey12345'

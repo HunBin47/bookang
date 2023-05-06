@@ -11,6 +11,7 @@ from carts.models import CartItem
 from .models import Order, OrderProduct
 from store.models import Product
 from .serializers import OrderSerializer
+from accounts.models import Account
 
 @csrf_exempt
 # def place_order(request):
@@ -104,7 +105,8 @@ from .serializers import OrderSerializer
         # for p in product_list:
         #     order_product = OrderProduct() 
         #     order_product.order =  order_number
-def place_order(request, username):
+def place_order(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        
+        user = Account.objects.filter(username=data['username'])
+        print(user.username)
