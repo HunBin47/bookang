@@ -20,29 +20,32 @@ def _cart_id(request):
 def add_cart(request, product_slug):
     if request.method == 'POST':
         product = Product.objects.get(slug=product_slug)
-        if request.user.is_authenticated:
-            is_exists_cart_item = CartItem.objects.filter(product=product, cart__user=request.user).exists()
-            if is_exists_cart_item:
-                cart_items = CartItem.objects.filter(
-                    product=product,
-                    cart__user=request.user
-                )
-                # id = [item.id for item in cart_items]
-                cart_item = cart_items[0]
-                cart_item.quantity += 1
-            else:
-                cart_item = CartItem.objects.create(
-                    product=product,
-                    cart=Cart.objects.create(user=request.user),
-                    # cart__user=request.user,
-                    quantity=1
-                )
-            cart_item.save()
-            return JsonResponse({
-                'success': True,
-                'message': 'Successfully added'
-            })
+        user_id = request.session.get('user_id', None)
+        user = Account.objects.filter(id=user_id).last()
+        # if user.:
+        print(request.session.get('user_id', None))
+        is_exists_cart_item = CartItem.objects.filter(product=product, cart__user=user).exists()
+        if is_exists_cart_item:
+            cart_items = CartItem.objects.filter(
+                product=product,
+                cart__user=user
+            )
+            # id = [item.id for item in cart_items]
+            cart_item = cart_items[0]
+            cart_item.quantity += 1
         else:
+            cart_item = CartItem.objects.create(
+                product=product,
+                cart=Cart.objects.create(cart_id=_cart_id(request), user=user),
+                # cart__user=request.user,
+                quantity=1
+            )
+        cart_item.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Successfully added'
+        })
+        # else:
             # try:
             #     cart = Cart.objects.get(cart_id=_cart_id(request=request))
             # except Cart.DoesNotExist:
@@ -67,10 +70,10 @@ def add_cart(request, product_slug):
             #         quantity=1
             #     )
             # cart_item.save()
-            return JsonResponse({
-                'success': False,
-                'message': 'Unauthenticated user account'
-            })
+            # return JsonResponse({
+            #     'success': False,
+            #     'message': 'Unauthenticated user account'
+            # })
     else:
         return JsonResponse({
             'success': False,
