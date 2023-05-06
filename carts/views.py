@@ -79,11 +79,16 @@ def reduce_cart(request, product_slug):
     if request.method == 'DELETE':
         product = get_object_or_404(Product, slug=product_slug)
         if request.user.is_authenticated:
-            cart_item = get_object_or_404(CartItem,
-                product=product
+            # cart_item = get_object_or_404(CartItem,
+            #     product=product
+            # )
+            cart_item = CartItem.objects.filter(
+                product=product,
+                cart__user=request.user
             )
         else:
             return JsonResponse({
+                'success': False,
                 'message': 'User is not authenticated'
             })
 
@@ -94,10 +99,12 @@ def reduce_cart(request, product_slug):
             cart_item.delete()
 
         return JsonResponse({
+            'success': True,
             'message': 'Cart item is reduced'
         })
     else: 
         return JsonResponse({
+            'success': False,
             'message': 'Invalid method'
         })
 
@@ -105,21 +112,18 @@ def reduce_cart(request, product_slug):
 def remove_cart_item(request, product_slug):
     if request.method == 'DELETE':
         product = get_object_or_404(Product, slug=product_slug)
-        cart_item = get_object_or_404(CartItem,
-            product=product
-        )
-        # if request.user.is_authenticated:
-        # else:
-        #     return JsonResponse({
-        #         'message': 'User is not authenticated'
-        #     })
+        cart_item = CartItem.objects.filter(
+                product=product,
+                cart__user=request.user
+            )
         cart_item.delete()
-
         return JsonResponse({
+            'success': True,
             'message': 'Cart item is deleted successfully'
         })
     else: 
         return JsonResponse({
+            'success': False,
             'message': 'Invalid method'
         })
 
