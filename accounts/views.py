@@ -28,6 +28,39 @@ from django.middleware import csrf
 import json
 from django.forms.models import model_to_dict
 from django.core.serializers import serialize
+import base64
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+from cryptography.fernet import Fernet
+
+def decrypt_password(encrypted_password):
+    # key = b'mysecretkey12345'
+    # iv = b'myiv123456789012'
+    key = b'mysecretkey12345'
+    iv = b'myiv123456789012'
+
+    encrypted_password_bytes = base64.b64decode(encrypted_password)
+    cipher = AES.new(key, AES.MODE_ECB)
+    # decrypted_data = unpad(cipher.decrypt(encrypted_password_bytes), AES.block_size)
+    # decrypted_password_bytes = cipher.decrypt(encrypted_password_bytes)
+    decrypted_password_bytes = cipher.decrypt(encrypted_password_bytes)
+    plaintext_password = decrypted_password_bytes.decode('utf-8')
+
+
+
+    # encrypted_password_bytes = base64.b64decode(encrypted_password)
+    # iv = encrypted_password[:AES.block_size]
+    # cipher = AES.new(key, AES.MODE_CBC, iv)
+    # plaintext_password = cipher.decrypt(encrypted_password[:AES.block_size])
+    # plaintext_password = decrypted_password_bytes.decode()
+
+    # cipher = AES.new(key, AES.MODE_EAX)
+    # ciphertext, tag = cipher.encrypt_and_digest(data)
+    # data = cipher.decrypt_and_verify(ciphertext, tag)
+    # plaintext_password = data.decode('utf-8')
+    print(plaintext_password)
+    return plaintext_password
+    
 @csrf_exempt
 def login_accounts(request):
     if request.method == 'POST':
@@ -37,9 +70,8 @@ def login_accounts(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-           
             return JsonResponse({
-                'username':user.username ,
+                'username':user.username,
                 'email':user.email,
                 'token': csrf.get_token(request)
             })
@@ -52,6 +84,7 @@ def login_accounts(request):
 def register(request):
     if request.method == 'POST':
         data = json.loads(request.body)
+        data['password'] = decrypt_password(data['password'])
         serializer = AccountSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
