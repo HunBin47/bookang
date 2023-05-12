@@ -87,10 +87,11 @@ def add_cart(request, product_slug):
         })
 
 
-@api_view(['DELETE'])
+@api_view(['POST', 'DELETE'])
 @csrf_exempt
 def reduce_cart(request, product_slug):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
+        print(request.data)
         user_id = request.data['userId']
         user = Account.objects.filter(id=user_id).last()
         product = get_object_or_404(Product, slug=product_slug)
@@ -98,24 +99,25 @@ def reduce_cart(request, product_slug):
             # cart_item = get_object_or_404(CartItem,
             #     product=product
             # )
-            cart_item = CartItem.objects.filter(
+            cart_item = CartItem.objects.get(
                 product=product,
                 cart__user=user
             )
+            print(cart_item)
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+            cart_item.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Cart item is reduced'
+            })
         else:
             return JsonResponse({
                 'success': False,
                 'message': 'User is not authenticated'
             })
 
-        if cart_item.quantity > 1:
-            cart_item.quantity -= 1
-            cart_item.save()
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart item is reduced'
-        })
     else:
         return JsonResponse({
             'success': False,
@@ -123,14 +125,14 @@ def reduce_cart(request, product_slug):
         })
 
 
-@api_view(['DELETE'])
+@api_view(['POST'])
 @csrf_exempt
 def remove_cart_item(request, product_slug):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         user_id = request.data['userId']
         user = Account.objects.filter(id=user_id).last()
         product = get_object_or_404(Product, slug=product_slug)
-        cart_item = CartItem.objects.filter(
+        cart_item = CartItem.objects.get(
             product=product,
             cart__user=user
         )
