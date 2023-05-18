@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-
+from rest_framework.decorators import api_view
 from store.models import Product
 from carts.models import Cart, CartItem
 from accounts.models import Account
@@ -16,122 +16,137 @@ def _cart_id(request):
         cart_id = request.session.create()
     return cart_id
 
+
+@api_view(['POST'])
 @csrf_exempt
 def add_cart(request, product_slug):
     if request.method == 'POST':
         product = Product.objects.get(slug=product_slug)
-        user_id = request.session.get('user_id', None)
+        user_id = request.data['userId']
         user = Account.objects.filter(id=user_id).last()
-        # if user.:
-        print(request.session.get('user_id', None))
-        is_exists_cart_item = CartItem.objects.filter(product=product, cart__user=user).exists()
-        if is_exists_cart_item:
-            cart_items = CartItem.objects.filter(
-                product=product,
-                cart__user=user
-            )
-            # id = [item.id for item in cart_items]
-            cart_item = cart_items[0]
-            cart_item.quantity += 1
+        print(user)
+        if user:
+            print(request.session.get('user_id', None))
+            is_exists_cart_item = CartItem.objects.filter(
+                product=product, cart__user=user).exists()
+            if is_exists_cart_item:
+                cart_items = CartItem.objects.filter(
+                    product=product,
+                    cart__user=user
+                )
+                # id = [item.id for item in cart_items]
+                cart_item = cart_items[0]
+                cart_item.quantity += 1
+            else:
+                cart_item = CartItem.objects.create(
+                    product=product,
+                    cart=Cart.objects.create(
+                        user=user),
+                    # cart__user=request.user,
+                    quantity=1
+                )
+            cart_item.save()
+            return JsonResponse({
+                'success': True,
+                'message': 'Successfully added'
+            })
         else:
-            cart_item = CartItem.objects.create(
-                product=product,
-                cart=Cart.objects.create(cart_id=_cart_id(request), user=user),
-                # cart__user=request.user,
-                quantity=1
-            )
+            try:
+                cart = Cart.objects.get(cart_id=_cart_id(request=request))
+            except Cart.DoesNotExist:
+                cart = Cart.objects.create(
+                    cart_id=_cart_id(request)
+                )
+            cart.save()
+
+            is_exists_cart_item = CartItem.objects.filter(
+                product=product, cart=cart).exists()
+            if is_exists_cart_item:
+                cart_items = CartItem.objects.filter(
+                    product=product,
+                    cart=cart
+                )
+                id = [item.id for item in cart_items]
+                cart_item = cart_items[0]
+                cart_item.quantity += 1
+            else:
+                cart_item = CartItem.objects.create(
+                    product=product,
+                    cart=cart,
+                    quantity=1
+                )
         cart_item.save()
         return JsonResponse({
-            'success': True,
-            'message': 'Successfully added'
+            'success': False,
+            'message': 'Unauthenticated user account'
         })
-        # else:
-            # try:
-            #     cart = Cart.objects.get(cart_id=_cart_id(request=request))
-            # except Cart.DoesNotExist:
-            #     cart = Cart.objects.create(
-            #         cart_id=_cart_id(request)
-            #     )
-            # cart.save()
-
-            # is_exists_cart_item = CartItem.objects.filter(product=product, cart=cart).exists()
-            # if is_exists_cart_item:
-            #     cart_items = CartItem.objects.filter(
-            #         product=product,
-            #         cart=cart
-            #     )
-            #     id = [item.id for item in cart_items]
-            #     cart_item = cart_items[0]
-            #     cart_item.quantity += 1
-            # else:
-            #     cart_item = CartItem.objects.create(
-            #         product=product,
-            #         cart=cart,
-            #         quantity=1
-            #     )
-            # cart_item.save()
-            # return JsonResponse({
-            #     'success': False,
-            #     'message': 'Unauthenticated user account'
-            # })
     else:
         return JsonResponse({
             'success': False,
             'message': 'Invalid method specified'
-        })   
+        })
 
+
+@api_view(['POST', 'DELETE'])
 @csrf_exempt
 def reduce_cart(request, product_slug):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
+        print(request.data)
+        user_id = request.data['userId']
+        user = Account.objects.filter(id=user_id).last()
         product = get_object_or_404(Product, slug=product_slug)
-        if request.user.is_authenticated:
+        if user:
             # cart_item = get_object_or_404(CartItem,
             #     product=product
             # )
-            cart_item = CartItem.objects.filter(
+            cart_item = CartItem.objects.get(
                 product=product,
-                cart__user=request.user
+                cart__user=user
             )
+            print(cart_item)
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+            cart_item.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Cart item is reduced'
+            })
         else:
             return JsonResponse({
                 'success': False,
                 'message': 'User is not authenticated'
             })
 
-        if cart_item.quantity > 1:
-            cart_item.quantity -= 1
-            cart_item.save()
-        else:
-            cart_item.delete()
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart item is reduced'
-        })
-    else: 
+    else:
         return JsonResponse({
             'success': False,
             'message': 'Invalid method'
         })
 
+
+@api_view(['POST'])
 @csrf_exempt
 def remove_cart_item(request, product_slug):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
+        user_id = request.data['userId']
+        user = Account.objects.filter(id=user_id).last()
         product = get_object_or_404(Product, slug=product_slug)
-        cart_item = CartItem.objects.filter(
-                product=product,
-                cart__user=request.user
-            )
+        cart_item = CartItem.objects.get(
+            product=product,
+            cart__user=user
+        )
         cart_item.delete()
         return JsonResponse({
             'success': True,
             'message': 'Cart item is deleted successfully'
         })
-    else: 
+    else:
         return JsonResponse({
             'success': False,
             'message': 'Invalid method'
         })
+
 
 @csrf_exempt
 def cart(request, username):
@@ -144,11 +159,13 @@ def cart(request, username):
                 total = 0
                 quantity = 0
             else:
-                cart_items = CartItem.objects.filter(cart__user=user, is_active=True)
+                cart_items = CartItem.objects.filter(
+                    cart__user=user, is_active=True)
                 serializer = CartItemSerializer(cart_items, many=True)
                 cart_items_data = serializer.data
                 cart_items_list = [item for item in cart_items_data]
-                total = sum([item.get('price') * item['quantity'] for item in cart_items_list])
+                total = sum([item.get('price') * item['quantity']
+                            for item in cart_items_list])
                 quantity = sum([item['quantity'] for item in cart_items_list])
             context = {
                 'user': username,
@@ -159,9 +176,8 @@ def cart(request, username):
             return JsonResponse(context)
         except ObjectDoesNotExist:
             return JsonResponse({'message': 'Product not found or user not logged in'})
-    else: 
+    else:
         return JsonResponse({'message': 'Invalid method'})
-
 
 
 # @login_required(login_url='login')

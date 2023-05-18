@@ -29,8 +29,8 @@ import json
 from django.forms.models import model_to_dict
 from django.core.serializers import serialize
 import base64
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
+# from Crypto.Cipher import AES
+# from Crypto.Util.Padding import unpad
 # from cryptography.fernet import Fernet
 
 def decrypt_password(encrypted_password):
@@ -69,7 +69,7 @@ def login_accounts(request):
         password = data.get('password')
         user = authenticate(request, email=email, password=password)
         if user is not None:
-            request.COOKIE['user'] = user
+            request.COOKIES['user'] = user
             request.session['user_id'] = user.id
             login(request, user)
             return JsonResponse({
