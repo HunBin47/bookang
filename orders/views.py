@@ -48,7 +48,7 @@ def place_order(request):
                     'success': False,
                     "message": "Stocked product with slug {} not found".format(slug)
                 })
-            if stocked_product.stock - cart_item.quantity > 0:
+            if stocked_product.stock - cart_item.quantity >= 0:
                 order_product.order = order
                 try:
                     order_product.product = get_object_or_404(
